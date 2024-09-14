@@ -3,9 +3,9 @@ import {getTests,getTestsAndQuestions,submitTest} from '../controllers/test.cont
 import protectRoute from '../middleware/protectRoot.js'
 const router=express.Router()
 
-router.route('/').get(getTests)
-router.route('/:testId').get(getTestsAndQuestions)
-router.route('/submit').post(submitTest)
+router.route('/').get(protectRoute,getTests)
+router.route('/:testId').get(protectRoute,getTestsAndQuestions)
+router.route('/submit').post(protectRoute,submitTest)
 
 
 export default router;

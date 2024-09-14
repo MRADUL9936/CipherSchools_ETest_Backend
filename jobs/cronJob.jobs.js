@@ -5,33 +5,37 @@ import Question from '../models/question.model.js';
 import {transporterFromEmailAuth, sendMail} from '../Services/mail.service.js'
 import { Test } from '../models/test.model.js';
 // Cron job that runs every hour
-schedule('0 * * * *', async () => {
+schedule('*/10 * * * * *', async () => {
   console.log('Running cron job to evaluate tests...');
 
   try {
     // Retrieve all ungraded submissions
     const ungradedSubmissions = await Submission.find({ isDeleted: false});
     const transporter=transporterFromEmailAuth()       ///create the transport for sending emails
- 
+    
+    if(ungradedSubmissions.length==0){
+     console.log("no new submissions")
+     return;
+    } 
     for (const submission of ungradedSubmissions) {
       const { testId, userId, selections } = submission;
 
       // Logic to evaluate the test based on selections
-      const testName=await Test.findById(testId); ///Get the testNameWith TestID
-      const score = evaluateTest(selections); 
+      const test=await Test.findById(testId); ///Get the testNameWith TestID
+      const testName=test.title
+      const score =await evaluateTest(selections); //get the score
+     
       // Mark the submission as graded and store the score
-      submission.isDeleted = true;
-      console.log(score)
-      await submission.save();
+       submission.isDeleted = true;
+       await submission.save();
 
       // Send email to the user with the score
       const user = await User.findById(userId);
        
 ////////////////////// user Mail Server here to send mail ///////////////////////////////////
-             sendMail(transporter,testName,score,user.email)
-
-      console.log(`Score emailed to user ${user.email}`);
+        await sendMail(transporter,testName,score,user.email)
     }
+    console.log("Cron job Completed")
   } catch (error) {
     console.error('Error:: jobs/cronJob.jobs.js ::', error.message);
     res.status(500).json({Error:"Internal Server Error"})
@@ -39,21 +43,21 @@ schedule('0 * * * *', async () => {
 });
 
 // Function to evaluate test (sample)
-const evaluateTest = async(selections)=> {
+const evaluateTest = async (selections) => {
   let score = 0;
 
-  selections.forEach((selection) => {
-    if (selection.option === getCorrectAnswer(selection.questionId)) {
-      score += selection.marks; // Add the question's marks if correct
+  // Use map to create an array of promises
+  const results = await Promise.all(selections.map(async (selection) => {
+    const question = await Question.findOne({ _id: selection.questionId });
+    if (selection.option === question.correctOption) {
+      return question.marks; // Return marks if correct
     }
-  });
+    return 0; // Return 0 if incorrect
+  }));
 
+  // Sum up all the results to get the final score
+  score = results.reduce((total, marks) => total + marks, 0);
+
+  console.log(score); // Log the final score
   return score;
-}
-
-// Function to get correct answer for a question
-const getCorrectAnswer= async (questionId)=> {
-  // Implement logic to retrieve correct answer based on questionId
-  const question=await Question.find({_id:questionId})
-  return question.correctOption; //return the correct option of the question
-}
+};
