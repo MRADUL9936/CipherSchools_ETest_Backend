@@ -20,7 +20,7 @@ const loginUser=async(req,res)=>{
              return res.status(400).json({Error: "Invalid User and password"})
           }
            
-         await generateTokenAndSetCookie(user._id,res);
+          generateTokenAndSetCookie(user._id,res);
           console.log("login successfully")
           res.status(200).json("Success")
 
@@ -75,7 +75,6 @@ const signUpUser=async (req,res)=>{
         })
 
         if(newuser){
-                generateTokenAndSetCookie(newuser._id,res);
             await newuser.save()
             res.status(201).json({Success:"User created Successfully"});
            
