@@ -20,7 +20,7 @@ const loginUser=async(req,res)=>{
              return res.status(400).json({Error: "Invalid User and password"})
           }
            
-          generateTokenAndSetCookie(user._id,res);
+         await generateTokenAndSetCookie(user._id,res);
           console.log("login successfully")
           res.status(200).json("Success")
 

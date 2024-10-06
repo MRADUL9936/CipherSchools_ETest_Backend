@@ -10,11 +10,11 @@ import './jobs/cronJob.jobs.js'
 
 dotenv.config()
 const app=express()
-const allowedOrigins = ['http://localhost:5173','https://cipherschools.mradulvishwakarma.com'];
+const whitelist = ['http://localhost:5173','https://etest.mradulvishwakarma.com/'];
 
 // Configure the CORS middleware
 app.use(cors({
-  origin: allowedOrigins,
+  origin: whitelist,
   methods: 'GET,POST,PUT,DELETE,OPTIONS',
   credentials: true, // Allow sending cookies from the browser
   allowedHeaders: ['Content-Type', 'Authorization'], // Allow specific headers

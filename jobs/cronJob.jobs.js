@@ -5,7 +5,7 @@ import Question from '../models/question.model.js';
 import {transporterFromEmailAuth, sendMail} from '../Services/mail.service.js'
 import { Test } from '../models/test.model.js';
 // Cron job that runs every hour
-schedule('*/10 * * * * *', async () => {
+schedule('*/30 * * * *', async () => {
   console.log('Running cron job to evaluate tests...');
 
   try {

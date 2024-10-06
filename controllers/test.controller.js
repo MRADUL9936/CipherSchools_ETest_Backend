@@ -1,7 +1,10 @@
 import { Test } from "../models/test.model.js";
 import Submission from "../models/submission.model.js";
 import User from "../models/user.model.js";
+import {setTestData,getTestData} from "../cache/cacheWithRedis.js"
+
 const getTests = async (req, res) => {
+  console.log(req.user)
   try {
     const test = await Test.find().select("-questions");
 
@@ -17,11 +20,27 @@ const getTests = async (req, res) => {
 
 const getTestsAndQuestions = async (req, res) => {
   try {
+   
     const testId = req.params.testId; //get the testId from frontend
-    const testData = await Test.findById(testId).populate({
-      path: "questions",
-      select: "-correctOption", // Exclude correctOption field
+    let testData = ""; // Use let for variable that will be reassigned
+
+// Check if testData is already cached
+const cachedData = await getTestData(testId); // Fetch cached data
+
+if (!cachedData) { // If there is no cached data
+    // Fetch from the database
+    testData = await Test.findById(testId).populate({
+        path: "questions",
+        select: "-correctOption", // Exclude correctOption field
     });
+
+    // Cache the fetched data, ensure testId is a string
+    await setTestData(testId, JSON.stringify(testData));
+} else {
+    // Use the cached data
+    testData = JSON.parse(cachedData);
+}
+
     if (!testData) {
       res.status(404).json({ Error: "No Such test Present" });
     }
